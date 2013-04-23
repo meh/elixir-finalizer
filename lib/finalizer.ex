@@ -7,7 +7,15 @@
 #  0. You just DO WHAT THE FUCK YOU WANT TO.
 
 defmodule Finalizer do
-  defp receiver(fun) do
+  defp receiver(fun) when is_function fun, 0 do
+    fn ->
+      receive do
+        _ -> fun.()
+      end
+    end
+  end
+
+  defp receiver(fun) when is_function fun, 1 do
     fn ->
       receive do
         data -> fun.(data)
@@ -15,7 +23,15 @@ defmodule Finalizer do
     end
   end
 
-  def define(data, fun) when is_function fun do
+  def define(fun) when is_function fun, 0 do
+    :resource.notify_when_destroyed(spawn(receiver(fun)), nil)
+  end
+
+  def define(pid) when is_pid pid do
+    :resource.notify_when_destroyed(pid, nil)
+  end
+
+  def define(data, fun) when is_function fun, 1 do
     :resource.notify_when_destroyed(spawn(receiver(fun)), data)
   end
 
