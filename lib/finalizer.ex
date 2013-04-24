@@ -7,24 +7,11 @@
 #  0. You just DO WHAT THE FUCK YOU WANT TO.
 
 defmodule Finalizer do
-  defp receiver(fun) when is_function fun, 0 do
-    fn ->
-      receive do
-        _ -> fun.()
-      end
-    end
-  end
-
-  defp receiver(fun) when is_function fun, 1 do
-    fn ->
-      receive do
-        data -> fun.(data)
-      end
-    end
-  end
-
   def define(fun) when is_function fun, 0 do
-    :resource.notify_when_destroyed(spawn(receiver(fun)), nil)
+    manager = Process.whereis(Finalizer.Manager)
+    id      = :gen_server.call(manager, { :register, fun })
+
+    :resource.notify_when_destroyed(manager, { :finalize, id, nil })
   end
 
   def define(pid) when is_pid pid do
@@ -32,7 +19,10 @@ defmodule Finalizer do
   end
 
   def define(data, fun) when is_function fun, 1 do
-    :resource.notify_when_destroyed(spawn(receiver(fun)), data)
+    manager = Process.whereis(Finalizer.Manager)
+    id      = :gen_server.call(manager, { :register, fun })
+
+    :resource.notify_when_destroyed(manager, { :finalize, id, data })
   end
 
   def define(data, pid) when is_pid pid do
