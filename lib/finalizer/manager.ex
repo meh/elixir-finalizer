@@ -34,16 +34,14 @@ defmodule Finalizer.Manager do
     { :reply, id, [ id: id, finalizers: Dict.put(state[:finalizers], id, fun) ] }
   end
 
+  def handle_info({ :finalize, id }, state) do
+    Dict.get!(state[:finalizers], id).()
+
+    { :noreply, [ id: state[:id], finalizers: Dict.delete(state[:finalizers], id) ] }
+  end
+
   def handle_info({ :finalize, id, data }, state) do
-    finalizer = Dict.get(state[:finalizers], id)
-
-    cond do
-      is_function finalizer, 0 ->
-        finalizer.()
-
-      is_function finalizer, 1 ->
-        finalizer.(data)
-    end
+    Dict.get!(state[:finalizers], id).(data)
 
     { :noreply, [ id: state[:id], finalizers: Dict.delete(state[:finalizers], id) ] }
   end

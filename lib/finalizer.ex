@@ -11,7 +11,7 @@ defmodule Finalizer do
     manager = Process.whereis(Finalizer.Manager)
     id      = :gen_server.call(manager, { :register, fun })
 
-    :resource.notify_when_destroyed(manager, { :finalize, id, nil })
+    :resource.notify_when_destroyed(manager, { :finalize, id })
   end
 
   def define(pid) when is_pid pid do
