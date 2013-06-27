@@ -14,7 +14,7 @@ defmodule Finalizer.Manager do
     if pid = Process.whereis(__MODULE__) do
       { :ok, pid }
     else
-      case :gen_server.start_link(__MODULE__, [id: 0, finalizers: HashDict.new], []) do
+      case :gen_server.start_link(__MODULE__, { 0, HashDict.new }, []) do
         { :ok, pid } = r ->
           Process.register(pid, __MODULE__)
           r
@@ -25,24 +25,24 @@ defmodule Finalizer.Manager do
   end
 
   def stop(_) do
-    Process.exit(Process.whereis(__MODULE__), "application stopped")
+    Process.whereis(__MODULE__) |> Process.exit("application stopped")
   end
 
-  def handle_call({ :register, fun }, _from, state) do
-    id = state[:id] + 1
+  def handle_call({ :register, fun }, _from, { last_id, finalizers }) do
+    id = last_id + 1
 
-    { :reply, id, [ id: id, finalizers: Dict.put(state[:finalizers], id, fun) ] }
+    { :reply, id, { id, Dict.put(finalizers, id, fun) } }
   end
 
-  def handle_info({ :finalize, id }, state) do
-    Dict.get!(state[:finalizers], id).()
+  def handle_info({ :finalize, id }, { last_id, finalizers }) do
+    Dict.get!(finalizers, id).()
 
-    { :noreply, [ id: state[:id], finalizers: Dict.delete(state[:finalizers], id) ] }
+    { :noreply, { last_id, Dict.delete(finalizers, id) } }
   end
 
-  def handle_info({ :finalize, id, data }, state) do
-    Dict.get!(state[:finalizers], id).(data)
+  def handle_info({ :finalize, id, data }, { last_id, finalizers }) do
+    Dict.get!(finalizers, id).(data)
 
-    { :noreply, [ id: state[:id], finalizers: Dict.delete(state[:finalizers], id) ] }
+    { :noreply, { last_id, Dict.delete(finalizers, id) } }
   end
 end

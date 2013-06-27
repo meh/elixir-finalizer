@@ -8,8 +8,7 @@
 
 defmodule Finalizer do
   def define(fun) when is_function fun, 0 do
-    manager = Process.whereis(Finalizer.Manager)
-    id      = :gen_server.call(manager, { :register, fun })
+    id = :gen_server.call(manager, { :register, fun })
 
     :resource.notify_when_destroyed(manager, { :finalize, id })
   end
@@ -19,13 +18,16 @@ defmodule Finalizer do
   end
 
   def define(data, fun) when is_function fun, 1 do
-    manager = Process.whereis(Finalizer.Manager)
-    id      = :gen_server.call(manager, { :register, fun })
+    id = :gen_server.call(manager, { :register, fun })
 
     :resource.notify_when_destroyed(manager, { :finalize, id, data })
   end
 
   def define(data, pid) when is_pid pid do
     :resource.notify_when_destroyed(pid, data)
+  end
+
+  defp manager do
+    Process.whereis(Finalizer.Manager)
   end
 end
