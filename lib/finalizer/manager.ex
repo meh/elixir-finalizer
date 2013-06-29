@@ -35,13 +35,13 @@ defmodule Finalizer.Manager do
   end
 
   def handle_info({ :finalize, id }, { last_id, finalizers }) do
-    Dict.get!(finalizers, id).()
+    Dict.get(finalizers, id).()
 
     { :noreply, { last_id, Dict.delete(finalizers, id) } }
   end
 
   def handle_info({ :finalize, id, data }, { last_id, finalizers }) do
-    Dict.get!(finalizers, id).(data)
+    Dict.get(finalizers, id).(data)
 
     { :noreply, { last_id, Dict.delete(finalizers, id) } }
   end
