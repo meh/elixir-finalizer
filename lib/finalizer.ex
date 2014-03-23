@@ -7,6 +7,16 @@
 #  0. You just DO WHAT THE FUCK YOU WANT TO.
 
 defmodule Finalizer do
+  use Application.Behaviour
+
+  def start(_, _) do
+    Finalizer.Supervisor.start_link
+  end
+
+  def stop(_) do
+    :ok
+  end
+
   def define(fun) when is_function fun, 0 do
     id = :gen_server.call(Finalizer.Manager, { :register, fun })
 

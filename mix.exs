@@ -8,7 +8,7 @@ defmodule Finalizer.Mixfile do
   end
 
   def application do
-    [ mod: { Finalizer.Manager, [] } ]
+    [ mod: { Finalizer, [] } ]
   end
 
   defp deps do
