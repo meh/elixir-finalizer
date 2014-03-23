@@ -7,25 +7,10 @@
 #  0. You just DO WHAT THE FUCK YOU WANT TO.
 
 defmodule Finalizer.Manager do
-  use Application.Behaviour
   use GenServer.Behaviour
 
-  def start(_, _) do
-    if pid = Process.whereis(__MODULE__) do
-      { :ok, pid }
-    else
-      case :gen_server.start_link(__MODULE__, { 0, HashDict.new }, []) do
-        { :ok, pid } = r ->
-          Process.register(pid, __MODULE__)
-          r
-
-        r -> r
-      end
-    end
-  end
-
-  def stop(_) do
-    Process.whereis(__MODULE__) |> Process.exit("application stopped")
+  def start_link(_args \\ []) do
+    :gen_server.start_link({ :local, :finalizer }, __MODULE__, [], [])
   end
 
   def handle_call({ :register, fun }, _from, { last_id, finalizers }) do
